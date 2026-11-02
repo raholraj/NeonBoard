@@ -13,7 +13,7 @@ jobs:
           unzip -o NeonBoard.zip
           echo "=== Project structure ==="
           ls -la NeonBoard/
-          ls -la NeonBoard/app/ || true
+          ls NeonBoard/app/src/main/java/com/neonboard/keyboard/
 
       - uses: actions/setup-java@v4
         with:
@@ -33,12 +33,30 @@ jobs:
           sdkmanager "platforms;android-34" "build-tools;34.0.0" || true
 
       - name: Build debug APK
+        id: build
         working-directory: NeonBoard
+        continue-on-error: true
         run: |
-          gradle :app:assembleDebug --no-daemon --stacktrace
+          gradle :app:assembleDebug --no-daemon --stacktrace 2>&1 | tee build.log
+          exit ${PIPESTATUS[0]}
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: NeonBoard/build.log
+
+      - name: Upload APK if successful
+        if: steps.build.outcome == 'success'
+        uses: actions/upload-artifact@v4
         with:
           name: NeonBoard-debug-apk
           path: NeonBoard/app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
+
+      - name: Fail if build failed
+        if: steps.build.outcome != 'success'
+        run: |
+          echo "Build failed. Check the build-log artifact."
+          cat NeonBoard/build.log | tail -100
+          exit 1
