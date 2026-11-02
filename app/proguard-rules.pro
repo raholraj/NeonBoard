@@ -1,0 +1,2 @@
+-keep class com.neonboard.keyboard.NeonIME { *; }
+-dontwarn com.airbnb.lottie.**
