@@ -8,12 +8,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Unzip project
+      - name: Unzip and prepare project
         run: |
+          rm -rf NeonBoard
           unzip -o NeonBoard.zip
+          # Fix any permission issues on extracted files
+          chmod -R a+rX NeonBoard
+          find NeonBoard -type f -exec chmod a+r {} \;
           echo "=== Project structure ==="
           ls -la NeonBoard/
-          ls NeonBoard/app/src/main/java/com/neonboard/keyboard/
+          ls -la NeonBoard/app/src/main/res/raw/ | head -30
+          ls -la NeonBoard/app/src/main/res/raw/reitanna_funnyyay.wav
+          test -f NeonBoard/app/src/main/res/raw/reitanna_funnyyay.wav && echo "WAV file OK" || echo "WAV MISSING"
 
       - uses: actions/setup-java@v4
         with:
@@ -58,5 +64,5 @@ jobs:
         if: steps.build.outcome != 'success'
         run: |
           echo "Build failed. Check the build-log artifact."
-          cat NeonBoard/build.log | tail -100
+          cat NeonBoard/build.log | tail -150
           exit 1
