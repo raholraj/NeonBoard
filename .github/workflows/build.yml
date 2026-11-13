@@ -11,21 +11,20 @@ jobs:
       - name: Unzip and prepare project
         run: |
           rm -rf NeonBoard
-          # Prefer the newest zip if present
-          if [ -f NeonBoard-1.zip ]; then
-            echo "Using NeonBoard-1.zip"
-            unzip -o NeonBoard-1.zip
-          else
-            echo "Using NeonBoard.zip"
-            unzip -o NeonBoard.zip
+          # Automatically pick the newest NeonBoard*.zip
+          ZIP=$(ls -t NeonBoard*.zip 2>/dev/null | head -1)
+          if [ -z "$ZIP" ]; then
+            echo "No NeonBoard*.zip found!"
+            exit 1
           fi
+          echo "Using $ZIP"
+          unzip -o "$ZIP"
           # Fix any permission issues on extracted files
           chmod -R a+rX NeonBoard
           find NeonBoard -type f -exec chmod a+r {} \;
           echo "=== Project structure ==="
           ls -la NeonBoard/
           ls NeonBoard/app/src/main/java/com/neonboard/keyboard/ || true
-          ls -la NeonBoard/app/src/main/res/raw/ | head -20 || true
 
       - uses: actions/setup-java@v4
         with:
